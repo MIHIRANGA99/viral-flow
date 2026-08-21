@@ -7,10 +7,10 @@ export interface ModelOption {
 }
 
 export const GEMINI_MODELS: ModelOption[] = [
-  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Recommended & Most Reliable)', description: 'Fast, high-rate limits and universal video support' },
+  { id: 'gemini-3.7-flash', name: 'Gemini 3.7 Flash (Default & Ultra Fast Reasoning)', description: 'Next-gen multimodal reasoning with high performance' },
+  { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash (Fast Multimodal)', description: 'Fast, high-rate limits and modern multimodal processing' },
+  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Universal Fallback)', description: 'High reliability and long context video support' },
   { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro (Deep Multimodal Reasoning)', description: 'High precision scene & copywriting detail' },
-  { id: 'gemini-1.5-flash-8b', name: 'Gemini 1.5 Flash 8B (Ultra Fast)', description: 'Lightweight and high-speed processing' },
-  { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash Experimental', description: 'Experimental 2.0 multimodal model' },
 ];
 
 export type GeminiModelId = string;
@@ -238,7 +238,7 @@ async function uploadToGeminiFileApi(
 export async function analyzeVideoWithGemini(
   file: File,
   apiKey: string,
-  modelId: string = 'gemini-1.5-flash',
+  modelId: string = 'gemini-3.7-flash',
   userCustomPrompt?: string,
   onProgress?: (progress: number, status: string) => void
 ): Promise<VideoAnalysisResult> {
@@ -247,7 +247,7 @@ export async function analyzeVideoWithGemini(
   }
 
   const cleanKey = apiKey.trim();
-  const cleanModel = (modelId || 'gemini-1.5-flash').trim().replace(/^models\//, '');
+  const cleanModel = (modelId || 'gemini-3.7-flash').trim().replace(/^models\//, '');
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent?key=${cleanKey}`;
   const finalPrompt = buildPromptTemplate(userCustomPrompt);
 

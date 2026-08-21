@@ -14,7 +14,7 @@ import { StorageService } from './utils/storage';
 
 export function App() {
   const [apiKey, setApiKey] = useState<string>('');
-  const [model, setModel] = useState<GeminiModelId>('gemini-1.5-flash');
+  const [model, setModel] = useState<GeminiModelId>('gemini-3.7-flash');
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   

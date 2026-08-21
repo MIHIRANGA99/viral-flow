@@ -17,9 +17,9 @@ export const StorageService = {
 
   getModel(): string {
     const saved = localStorage.getItem(STORAGE_KEYS.MODEL);
-    if (!saved || saved === 'gemini-2.5-flash' || saved === 'gemini-2.0-flash') {
-      localStorage.setItem(STORAGE_KEYS.MODEL, 'gemini-1.5-flash');
-      return 'gemini-1.5-flash';
+    if (!saved || saved === 'gemini-2.5-flash' || saved === 'gemini-2.0-flash' || saved === 'gemini-1.5-flash') {
+      localStorage.setItem(STORAGE_KEYS.MODEL, 'gemini-3.7-flash');
+      return 'gemini-3.7-flash';
     }
     return saved;
   },

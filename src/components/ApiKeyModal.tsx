@@ -20,7 +20,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
 }) => {
   const [keyInput, setKeyInput] = useState(currentKey);
   const [selectedModel, setSelectedModel] = useState<string>(
-    currentModel || 'gemini-1.5-flash'
+    currentModel || 'gemini-3.7-flash'
   );
   const [customModel, setCustomModel] = useState('');
   const [availableModels, setAvailableModels] = useState<ModelOption[]>(GEMINI_MODELS);
