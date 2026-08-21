@@ -29,6 +29,7 @@ import {
   Image as ImageIcon,
   RotateCcw
 } from 'lucide-react';
+import { FullScreenLoader } from './FullScreenLoader';
 import type { VideoMetadata, WatermarkConfig, MusicAdjustmentConfig } from '../types';
 import { mergeVideoAndAudio } from '../services/audioMerger';
 import confetti from 'canvas-confetti';
@@ -422,6 +423,15 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
 
     return (
       <div className="w-full space-y-4">
+        {/* Full-Screen Render/Export Loader */}
+        <FullScreenLoader
+          isOpen={isRendering}
+          progress={renderProgress.percent}
+          status={renderProgress.status}
+          fileName={metadata.name}
+          type="export"
+        />
+
         {/* Hidden Audio File Input */}
         <input
           type="file"
