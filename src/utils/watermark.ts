@@ -14,6 +14,40 @@ export function getLoadedLogoImage(url: string): HTMLImageElement {
   return img;
 }
 
+export async function preloadLogo(url?: string): Promise<void> {
+  if (!url) return;
+  const img = getLoadedLogoImage(url);
+  if (img.complete && img.naturalWidth > 0) return;
+  try {
+    if (img.decode) {
+      await img.decode();
+    } else {
+      await new Promise((res) => {
+        img.onload = () => res(true);
+        img.onerror = () => res(false);
+      });
+    }
+  } catch {
+    // Ignore decode errors, fallback to standard drawing
+  }
+}
+
+// Single reusable scratch canvas for zero-allocation inpainting
+let sharedScratchCanvas: HTMLCanvasElement | null = null;
+let sharedScratchCtx: CanvasRenderingContext2D | null = null;
+
+function getScratchContext(width: number, height: number): { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D } | null {
+  if (!sharedScratchCanvas) {
+    sharedScratchCanvas = document.createElement('canvas');
+    sharedScratchCtx = sharedScratchCanvas.getContext('2d', { alpha: true });
+  }
+  if (sharedScratchCanvas.width !== width || sharedScratchCanvas.height !== height) {
+    sharedScratchCanvas.width = width;
+    sharedScratchCanvas.height = height;
+  }
+  return sharedScratchCtx ? { canvas: sharedScratchCanvas, ctx: sharedScratchCtx } : null;
+}
+
 export function renderFrameWithWatermarkFilter(
   ctx: CanvasRenderingContext2D,
   video: HTMLVideoElement,
@@ -56,7 +90,7 @@ export function renderFrameWithWatermarkFilter(
   // Draw base video frame
   ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
 
-  // Mode 4: Brand Logo Overlay (covers or adds branded logo watermark)
+  // Mode 4: Brand Logo Overlay
   if (config.mode === 'logo' && config.logoOverlay?.enabled) {
     const logoCfg = config.logoOverlay;
     if (logoCfg.imageUrl) {
@@ -71,7 +105,6 @@ export function renderFrameWithWatermarkFilter(
         const logoX = (logoCfg.x / 100) * targetWidth;
         const logoY = (logoCfg.y / 100) * targetHeight;
 
-        // Rounded clip if border radius is set
         if (logoCfg.borderRadius && logoCfg.borderRadius > 0) {
           ctx.beginPath();
           ctx.roundRect(logoX, logoY, logoW, logoH, (logoCfg.borderRadius / 100) * logoW);
@@ -92,7 +125,7 @@ export function renderFrameWithWatermarkFilter(
 
   if (boxW <= 0 || boxH <= 0) return;
 
-  // Mode 2: Clean Adjacent Texture Inpainting
+  // Mode 2: Clean Adjacent Texture Inpainting (Reuses shared scratch canvas for high performance)
   if (config.mode === 'inpaint') {
     ctx.save();
 
@@ -106,13 +139,10 @@ export function renderFrameWithWatermarkFilter(
     const vidScaleX = video.videoWidth / targetWidth;
     const vidScaleY = video.videoHeight / targetHeight;
 
-    const featherCanvas = document.createElement('canvas');
-    featherCanvas.width = boxW;
-    featherCanvas.height = boxH;
-    const fCtx = featherCanvas.getContext('2d');
-
-    if (fCtx) {
-      fCtx.drawImage(
+    const scratch = getScratchContext(Math.ceil(boxW), Math.ceil(boxH));
+    if (scratch) {
+      scratch.ctx.clearRect(0, 0, boxW, boxH);
+      scratch.ctx.drawImage(
         video,
         sourceX * vidScaleX,
         sourceY * vidScaleY,
@@ -124,11 +154,8 @@ export function renderFrameWithWatermarkFilter(
         boxH
       );
 
-      fCtx.filter = 'blur(4px)';
-      fCtx.drawImage(featherCanvas, 0, 0);
-
       ctx.globalAlpha = 0.98;
-      ctx.drawImage(featherCanvas, boxX, boxY, boxW, boxH);
+      ctx.drawImage(scratch.canvas, boxX, boxY, boxW, boxH);
     }
 
     ctx.restore();

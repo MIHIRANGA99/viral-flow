@@ -1,5 +1,5 @@
 import type { WatermarkConfig, MusicAdjustmentConfig } from '../types';
-import { renderFrameWithWatermarkFilter } from '../utils/watermark';
+import { renderFrameWithWatermarkFilter, preloadLogo } from '../utils/watermark';
 
 export interface MergeOptions {
   videoFile: File;
@@ -22,7 +22,12 @@ export async function mergeVideoAndAudio({
 }: MergeOptions): Promise<{ blob: Blob; downloadUrl: string; filename: string }> {
   return new Promise(async (resolve, reject) => {
     try {
-      onProgress?.(5, 'Preparing media streams...');
+      onProgress?.(5, 'Preparing media decoder & audio pipeline...');
+
+      // Preload logo if logo overlay mode is enabled
+      if (watermarkConfig?.enabled && watermarkConfig.mode === 'logo' && watermarkConfig.logoOverlay?.imageUrl) {
+        await preloadLogo(watermarkConfig.logoOverlay.imageUrl);
+      }
 
       const videoUrl = URL.createObjectURL(videoFile);
       const audioUrl = audioFile ? URL.createObjectURL(audioFile) : null;
@@ -32,6 +37,7 @@ export async function mergeVideoAndAudio({
       videoEl.crossOrigin = 'anonymous';
       videoEl.muted = false;
       videoEl.playsInline = true;
+      videoEl.playbackRate = 1.0;
 
       let audioEl: HTMLAudioElement | null = null;
       if (audioUrl) {
@@ -44,6 +50,7 @@ export async function mergeVideoAndAudio({
         }
       }
 
+      // Wait for metadata
       await Promise.all([
         new Promise((res) => {
           videoEl.onloadedmetadata = res;
@@ -65,22 +72,24 @@ export async function mergeVideoAndAudio({
       const width = videoEl.videoWidth || 1080;
       const height = videoEl.videoHeight || 1920;
 
-      onProgress?.(15, 'Setting up Audio & Canvas Render Pipeline...');
+      onProgress?.(15, 'Setting up Audio & Hardware Video Pipeline...');
 
       const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
       const audioCtx = new AudioCtxClass();
+      if (audioCtx.state === 'suspended') {
+        await audioCtx.resume();
+      }
 
-      // Video audio path
+      // Video audio routing
       const videoSource = audioCtx.createMediaElementSource(videoEl);
       const videoGain = audioCtx.createGain();
       videoGain.gain.value = videoVolume;
       videoSource.connect(videoGain);
 
-      // Destination for recorder
       const dest = audioCtx.createMediaStreamDestination();
       videoGain.connect(dest);
 
-      // Background music audio path if present
+      // Background music routing
       if (audioEl) {
         const audioSource = audioCtx.createMediaElementSource(audioEl);
         const audioGain = audioCtx.createGain();
@@ -88,7 +97,6 @@ export async function mergeVideoAndAudio({
         audioSource.connect(audioGain);
         audioGain.connect(dest);
 
-        // Schedule Fade-In and Fade-Out automation
         const now = audioCtx.currentTime;
         const endTime = now + duration;
 
@@ -105,48 +113,33 @@ export async function mergeVideoAndAudio({
         }
       }
 
-      // Video Stream Source
-      let videoStream: MediaStream;
-      let animFrameId: number | null = null;
-
+      // Video Canvas setup
       const canvas = document.createElement('canvas');
       canvas.width = width;
       canvas.height = height;
-      const ctx = canvas.getContext('2d', { alpha: false });
-
-      if (watermarkConfig && watermarkConfig.enabled && ctx) {
-        const drawFrame = () => {
-          if (!videoEl.paused && !videoEl.ended) {
-            renderFrameWithWatermarkFilter(ctx, videoEl, watermarkConfig, width, height);
-            animFrameId = requestAnimationFrame(drawFrame);
-          }
-        };
-
-        videoEl.addEventListener('play', () => {
-          drawFrame();
-        });
-
-        videoStream = canvas.captureStream(30);
-      } else {
-        if ((videoEl as any).captureStream) {
-          videoStream = (videoEl as any).captureStream();
-        } else if ((videoEl as any).mozCaptureStream) {
-          videoStream = (videoEl as any).mozCaptureStream();
-        } else {
-          if (ctx) {
-            const drawSimple = () => {
-              if (!videoEl.paused && !videoEl.ended) {
-                ctx.drawImage(videoEl, 0, 0, width, height);
-                animFrameId = requestAnimationFrame(drawSimple);
-              }
-            };
-            videoEl.addEventListener('play', drawSimple);
-            videoStream = canvas.captureStream(30);
-          } else {
-            throw new Error('Your browser does not support video stream capture.');
-          }
-        }
+      const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+      if (!ctx) {
+        throw new Error('Failed to initialize 2D canvas context.');
       }
+
+      let isRecordingActive = true;
+      let rvfcHandle: number | null = null;
+      let rafHandle: number | null = null;
+
+      // Frame render routine synchronized with decoder
+      const renderCurrentFrame = () => {
+        if (!isRecordingActive) return;
+        renderFrameWithWatermarkFilter(ctx, videoEl, watermarkConfig || { enabled: false, x: 0, y: 0, width: 0, height: 0, mode: 'crop', cropZoom: 1, blurStrength: 0 }, width, height);
+
+        if ('requestVideoFrameCallback' in videoEl) {
+          rvfcHandle = (videoEl as any).requestVideoFrameCallback(renderCurrentFrame);
+        } else {
+          rafHandle = requestAnimationFrame(renderCurrentFrame);
+        }
+      };
+
+      // 60 FPS smooth capture stream from canvas
+      const videoStream = canvas.captureStream(60);
 
       const combinedTracks = [
         ...videoStream.getVideoTracks(),
@@ -156,6 +149,7 @@ export async function mergeVideoAndAudio({
       const combinedStream = new MediaStream(combinedTracks);
 
       const mimeTypes = [
+        'video/mp4;codecs=avc1,mp4a.40.2',
         'video/mp4',
         'video/webm;codecs=vp9,opus',
         'video/webm;codecs=vp8,opus',
@@ -165,7 +159,7 @@ export async function mergeVideoAndAudio({
 
       const recorder = new MediaRecorder(combinedStream, {
         mimeType: selectedMime,
-        videoBitsPerSecond: 7000000,
+        videoBitsPerSecond: 10000000, // 10 Mbps crisp buttery smooth bitrate
       });
 
       const chunks: Blob[] = [];
@@ -176,7 +170,14 @@ export async function mergeVideoAndAudio({
       };
 
       recorder.onstop = () => {
-        if (animFrameId) cancelAnimationFrame(animFrameId);
+        isRecordingActive = false;
+        if (rvfcHandle !== null && 'cancelVideoFrameCallback' in videoEl) {
+          (videoEl as any).cancelVideoFrameCallback(rvfcHandle);
+        }
+        if (rafHandle !== null) {
+          cancelAnimationFrame(rafHandle);
+        }
+
         const finalBlob = new Blob(chunks, { type: selectedMime });
         const ext = selectedMime.includes('mp4') ? 'mp4' : 'webm';
         const rawName = videoFile.name.replace(/\.[^/.]+$/, '');
@@ -192,13 +193,24 @@ export async function mergeVideoAndAudio({
         resolve({ blob: finalBlob, downloadUrl, filename });
       };
 
-      onProgress?.(25, 'Rendering video frames & audio...');
+      onProgress?.(25, 'Rendering video frames smoothly...');
 
-      recorder.start(100);
+      // Initial frame render
+      renderFrameWithWatermarkFilter(ctx, videoEl, watermarkConfig || { enabled: false, x: 0, y: 0, width: 0, height: 0, mode: 'crop', cropZoom: 1, blurStrength: 0 }, width, height);
+
+      // Start recorder with 250ms chunks to reduce event overhead
+      recorder.start(250);
 
       videoEl.currentTime = 0;
       if (audioEl) {
         audioEl.currentTime = musicAdjustment?.startOffset || 0;
+      }
+
+      // Kick off decoder synchronized rendering
+      if ('requestVideoFrameCallback' in videoEl) {
+        rvfcHandle = (videoEl as any).requestVideoFrameCallback(renderCurrentFrame);
+      } else {
+        rafHandle = requestAnimationFrame(renderCurrentFrame);
       }
 
       const playPromises: Promise<void>[] = [videoEl.play()];
@@ -209,14 +221,16 @@ export async function mergeVideoAndAudio({
         if (!videoEl.paused && duration > 0) {
           const current = videoEl.currentTime;
           const pct = Math.min(95, Math.floor(25 + (current / duration) * 70));
-          onProgress?.(pct, `Processing frame (${current.toFixed(1)}s / ${duration.toFixed(1)}s)...`);
+          onProgress?.(pct, `Processing video frames (${current.toFixed(1)}s / ${duration.toFixed(1)}s)...`);
         }
-      }, 250);
+      }, 200);
 
       videoEl.onended = () => {
         clearInterval(progressInterval);
         if (audioEl) audioEl.pause();
-        recorder.stop();
+        if (recorder.state === 'recording') {
+          recorder.stop();
+        }
       };
 
       setTimeout(() => {
@@ -226,7 +240,7 @@ export async function mergeVideoAndAudio({
           if (audioEl) audioEl.pause();
           recorder.stop();
         }
-      }, (duration + 1.5) * 1000);
+      }, (duration + 1.2) * 1000);
     } catch (err: any) {
       reject(err);
     }
