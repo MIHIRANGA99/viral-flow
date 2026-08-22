@@ -111,9 +111,9 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
       logoOverlay: {
         enabled: true,
         imageUrl: DEFAULT_LOGO_URL,
-        x: 72, // Bottom-right default for vertical clips
-        y: 91,
-        width: 24,
+        x: 85, // Bottom-right default for vertical clips
+        y: 95,
+        width: 13,
         opacity: 0.95,
         borderRadius: 8,
       },
@@ -198,9 +198,9 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
             ...(p.logoOverlay || {
               enabled: true,
               imageUrl: newUrl,
-              x: 72,
-              y: 91,
-              width: 24,
+              x: 85,
+              y: 95,
+              width: 13,
               opacity: 0.95,
               borderRadius: 8,
             }),
@@ -218,9 +218,9 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
           ...(p.logoOverlay || {
             enabled: true,
             imageUrl: DEFAULT_LOGO_URL,
-            x: 72,
-            y: 91,
-            width: 24,
+            x: 85,
+            y: 95,
+            width: 13,
             opacity: 0.95,
             borderRadius: 8,
           }),
@@ -375,11 +375,11 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
       } else if (corner === 'br') {
         setWatermarkConfig((prev) => ({
           ...prev,
-          x: 72,
-          y: 91,
-          width: 22,
+          x: 85,
+          y: 95,
+          width: 13,
           height: 7.5,
-          logoOverlay: prev.logoOverlay ? { ...prev.logoOverlay, x: 72, y: 91 } : undefined,
+          logoOverlay: prev.logoOverlay ? { ...prev.logoOverlay, x: 85, y: 95, width: 13 } : undefined,
         }));
       }
     };
@@ -890,13 +890,13 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
                     {/* Fine-Tuning Sliders for Logo with full 0-98% range */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 text-[10px] text-slate-400">
                       <div>
-                        <span>X Pos: {Math.round(watermarkConfig.logoOverlay?.x ?? 72)}%</span>
+                        <span>X Pos: {Math.round(watermarkConfig.logoOverlay?.x ?? 85)}%</span>
                         <input
                           type="range"
                           min="0"
                           max="95"
                           step="0.5"
-                          value={watermarkConfig.logoOverlay?.x ?? 72}
+                          value={watermarkConfig.logoOverlay?.x ?? 85}
                           onChange={(e) =>
                             setWatermarkConfig((p) => ({
                               ...p,
@@ -904,9 +904,9 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
                                 ...(p.logoOverlay || {
                                   enabled: true,
                                   imageUrl: DEFAULT_LOGO_URL,
-                                  x: 72,
-                                  y: 91,
-                                  width: 24,
+                                  x: 85,
+                                  y: 95,
+                                  width: 13,
                                   opacity: 0.95,
                                   borderRadius: 8,
                                 }),
@@ -919,13 +919,13 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
                       </div>
 
                       <div>
-                        <span>Y Pos (0 - 98%): {Math.round(watermarkConfig.logoOverlay?.y ?? 91)}%</span>
+                        <span>Y Pos (0 - 98%): {Math.round(watermarkConfig.logoOverlay?.y ?? 95)}%</span>
                         <input
                           type="range"
                           min="0"
                           max="98"
                           step="0.5"
-                          value={watermarkConfig.logoOverlay?.y ?? 91}
+                          value={watermarkConfig.logoOverlay?.y ?? 95}
                           onChange={(e) =>
                             setWatermarkConfig((p) => ({
                               ...p,
@@ -933,9 +933,9 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
                                 ...(p.logoOverlay || {
                                   enabled: true,
                                   imageUrl: DEFAULT_LOGO_URL,
-                                  x: 72,
-                                  y: 91,
-                                  width: 24,
+                                  x: 85,
+                                  y: 95,
+                                  width: 13,
                                   opacity: 0.95,
                                   borderRadius: 8,
                                 }),
@@ -948,13 +948,13 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
                       </div>
 
                       <div>
-                        <span>Size: {Math.round(watermarkConfig.logoOverlay?.width ?? 24)}%</span>
+                        <span>Size: {Math.round(watermarkConfig.logoOverlay?.width ?? 13)}%</span>
                         <input
                           type="range"
                           min="5"
                           max="60"
                           step="0.5"
-                          value={watermarkConfig.logoOverlay?.width ?? 24}
+                          value={watermarkConfig.logoOverlay?.width ?? 13}
                           onChange={(e) =>
                             setWatermarkConfig((p) => ({
                               ...p,
@@ -962,9 +962,9 @@ export const VideoPlayer = forwardRef<VideoPlayerHandle, VideoPlayerProps>(
                                 ...(p.logoOverlay || {
                                   enabled: true,
                                   imageUrl: DEFAULT_LOGO_URL,
-                                  x: 72,
-                                  y: 91,
-                                  width: 24,
+                                  x: 85,
+                                  y: 95,
+                                  width: 13,
                                   opacity: 0.95,
                                   borderRadius: 8,
                                 }),
