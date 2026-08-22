@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Sparkles, Film, Cpu, Music, Bot, Layers } from 'lucide-react';
+import { Sparkles, Film, Cpu, Music, Bot, Layers, Zap } from 'lucide-react';
 
 interface FullScreenLoaderProps {
   isOpen: boolean;
@@ -52,6 +52,22 @@ export const FullScreenLoader: React.FC<FullScreenLoaderProps> = ({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-[#070A12]/90 backdrop-blur-2xl animate-fadeIn select-none">
+      {/* Embedded SVG Gradients */}
+      <svg width="0" height="0" className="absolute">
+        <defs>
+          <linearGradient id="ai-glow-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#818CF8" />
+            <stop offset="50%" stopColor="#EC4899" />
+            <stop offset="100%" stopColor="#F59E0B" />
+          </linearGradient>
+          <linearGradient id="export-glow-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#34D399" />
+            <stop offset="50%" stopColor="#FBBF24" />
+            <stop offset="100%" stopColor="#6366F1" />
+          </linearGradient>
+        </defs>
+      </svg>
+
       {/* Background Animated Gradient Aura */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] sm:w-[600px] h-[420px] sm:h-[600px] bg-gradient-to-tr from-indigo-600/25 via-pink-600/20 to-amber-500/25 rounded-full blur-3xl animate-pulse" />
@@ -67,17 +83,36 @@ export const FullScreenLoader: React.FC<FullScreenLoaderProps> = ({
             }`}
           >
             <div className="w-full h-full bg-slate-950 rounded-3xl flex items-center justify-center relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-pink-500/20 animate-pulse" />
+              {/* Pulsing Ambient Backdrop */}
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/25 via-pink-500/20 to-amber-500/20 animate-pulse" />
+              
+              {/* Radar Scanner Beam Line */}
+              <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-indigo-400 to-transparent animate-bounce opacity-70" />
+
+              {/* Glowing Center AI Icon */}
               {type === 'analysis' ? (
-                <Bot className="w-12 h-12 text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-pink-400 to-amber-300 animate-bounce" />
+                <div className="relative z-10 flex items-center justify-center">
+                  <div className="absolute w-12 h-12 bg-indigo-500/30 rounded-full blur-md" />
+                  <Bot
+                    className="w-12 h-12 text-indigo-300 relative z-10 animate-pulse"
+                    style={{ stroke: 'url(#ai-glow-gradient)', strokeWidth: 2 }}
+                  />
+                </div>
               ) : (
-                <Film className="w-12 h-12 text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-amber-300 to-indigo-400 animate-bounce" />
+                <div className="relative z-10 flex items-center justify-center">
+                  <div className="absolute w-12 h-12 bg-emerald-500/30 rounded-full blur-md" />
+                  <Film
+                    className="w-12 h-12 text-emerald-300 relative z-10 animate-pulse"
+                    style={{ stroke: 'url(#export-glow-gradient)', strokeWidth: 2 }}
+                  />
+                </div>
               )}
             </div>
           </div>
 
+          {/* Sparkles */}
           <Sparkles className="w-6 h-6 text-amber-300 absolute -top-2 -right-2 animate-spin duration-3000" />
-          <Sparkles className="w-5 h-5 text-pink-400 absolute -bottom-1 -left-2 animate-pulse" />
+          <Zap className="w-4 h-4 text-pink-400 absolute -bottom-1 -left-2 animate-pulse" />
         </div>
 
         {/* Title & Status */}
