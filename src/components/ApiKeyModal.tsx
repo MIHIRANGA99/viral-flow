@@ -20,7 +20,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
 }) => {
   const [keyInput, setKeyInput] = useState(currentKey);
   const [selectedModel, setSelectedModel] = useState<string>(
-    currentModel || 'gemini-3.7-flash'
+    currentModel || 'gemini-2.0-flash'
   );
   const [customModel, setCustomModel] = useState('');
   const [availableModels, setAvailableModels] = useState<ModelOption[]>(GEMINI_MODELS);
@@ -103,33 +103,33 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-lg rounded-2xl bg-[#111827] border border-slate-700 shadow-2xl p-6 overflow-hidden max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fadeIn">
+      <div className="relative w-full max-w-lg rounded-3xl cinema-panel shadow-2xl p-6 sm:p-7 overflow-hidden max-h-[90vh] flex flex-col border border-amber-500/30">
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800 shrink-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-              <Key className="w-4 h-4" />
+        <div className="flex items-center justify-between pb-4 border-b border-amber-500/20 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <Key className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white">Gemini API Settings</h2>
-              <p className="text-xs text-slate-400">Configure your local multimodal video engine</p>
+              <h2 className="text-base font-black text-white font-mono">Gemini AI Studio Key</h2>
+              <p className="text-xs text-zinc-400">Multimodal speech transcription &amp; Sinhala translation</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+            className="text-zinc-400 hover:text-white p-2 rounded-xl hover:bg-zinc-800 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Scrollable Body */}
-        <div className="py-4 space-y-4 text-sm overflow-y-auto flex-1 pr-1">
+        <div className="py-4 space-y-4 text-sm overflow-y-auto flex-1 pr-1 custom-scrollbar">
           {/* API Key Input */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
-              Google Gemini API Key
+            <label className="block text-[11px] font-black text-amber-400 uppercase tracking-widest mb-2 font-mono">
+              GOOGLE GEMINI API KEY
             </label>
             <div className="relative flex items-center">
               <input
@@ -137,33 +137,33 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
                 value={keyInput}
                 onChange={(e) => setKeyInput(e.target.value)}
                 placeholder="AIzaSy..."
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-mono"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-4 py-3 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-amber-500 font-mono"
               />
               <button
                 type="button"
                 onClick={() => setShowKey(!showKey)}
-                className="absolute right-3 text-xs text-slate-400 hover:text-slate-200 cursor-pointer font-medium"
+                className="absolute right-3.5 text-xs text-zinc-400 hover:text-amber-300 cursor-pointer font-bold font-mono"
               >
-                {showKey ? 'Hide' : 'Show'}
+                {showKey ? 'HIDE' : 'SHOW'}
               </button>
             </div>
-            <div className="flex items-center justify-between mt-2 text-xs">
+            <div className="flex items-center justify-between mt-2.5 text-xs">
               <a
                 href="https://aistudio.google.com/app/apikey"
                 target="_blank"
                 rel="noreferrer"
-                className="text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-1 font-medium underline underline-offset-2"
+                className="text-amber-400 hover:text-amber-300 inline-flex items-center gap-1 font-bold underline underline-offset-2"
               >
-                <span>Get a free key from Google AI Studio</span>
-                <ExternalLink className="w-3 h-3" />
+                <span>Get free key from Google AI Studio</span>
+                <ExternalLink className="w-3.5 h-3.5" />
               </a>
               <button
                 type="button"
                 onClick={handleTestKey}
                 disabled={testing || !keyInput.trim()}
-                className="text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded-md text-xs font-medium border border-slate-700 transition disabled:opacity-50 cursor-pointer"
+                className="text-amber-300 hover:text-black hover:bg-amber-400 bg-zinc-900 px-3 py-1.5 rounded-xl text-xs font-bold border border-amber-500/30 transition disabled:opacity-50 cursor-pointer font-mono"
               >
-                {testing ? 'Testing...' : 'Test Connection'}
+                {testing ? 'Testing...' : 'Test Key'}
               </button>
             </div>
           </div>
@@ -199,7 +199,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
               )}
             </div>
 
-            <div className="grid grid-cols-1 gap-2 max-h-56 overflow-y-auto pr-1">
+            <div className="grid grid-cols-1 gap-2 max-h-56 overflow-y-auto pr-1 custom-scrollbar">
               {availableModels.map((model) => (
                 <button
                   key={model.id}
@@ -208,25 +208,25 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
                     setSelectedModel(model.id);
                     setCustomModel('');
                   }}
-                  className={`text-left p-3 rounded-xl border transition flex items-start justify-between cursor-pointer ${
+                  className={`text-left p-3.5 rounded-2xl border transition flex items-start justify-between cursor-pointer ${
                     selectedModel === model.id && !customModel
-                      ? 'bg-indigo-600/15 border-indigo-500/80 text-white'
-                      : 'bg-slate-900/50 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+                      ? 'bg-amber-500/15 border-amber-400 text-white shadow-md'
+                      : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-amber-500/30 hover:text-zinc-200'
                   }`}
                 >
                   <div>
-                    <div className="font-semibold text-xs text-white flex items-center gap-1.5">
+                    <div className="font-bold text-xs text-white flex items-center gap-2 font-mono">
                       {model.name}
                       {model.id === 'gemini-1.5-flash' && (
-                        <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.2 rounded border border-indigo-500/30">
-                          Recommended
+                        <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/30">
+                          Fast
                         </span>
                       )}
                     </div>
-                    <div className="text-[11px] text-slate-400 mt-0.5 font-mono">{model.id}</div>
+                    <div className="text-[11px] text-zinc-500 mt-0.5 font-mono">{model.id}</div>
                   </div>
                   {selectedModel === model.id && !customModel && (
-                    <span className="w-4 h-4 rounded-full bg-indigo-500 text-white flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="w-4 h-4 rounded-full bg-amber-500 text-black flex items-center justify-center shrink-0 mt-0.5 font-bold">
                       <Check className="w-2.5 h-2.5 stroke-[3]" />
                     </span>
                   )}
@@ -235,46 +235,46 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({
             </div>
 
             {/* Custom Model Input */}
-            <div className="mt-2.5 pt-2 border-t border-slate-800/80">
-              <label className="block text-[11px] font-medium text-slate-400 mb-1">
-                Or enter custom model ID:
+            <div className="mt-2.5 pt-2 border-t border-zinc-800">
+              <label className="block text-[11px] font-bold text-zinc-400 mb-1 font-mono">
+                Custom Gemini Model ID:
               </label>
               <div className="flex items-center gap-2">
                 <input
                   type="text"
                   value={customModel}
                   onChange={(e) => setCustomModel(e.target.value)}
-                  placeholder="e.g. gemini-1.5-flash"
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-mono"
+                  placeholder="e.g. gemini-2.5-flash"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-amber-500 font-mono"
                 />
               </div>
             </div>
           </div>
 
           {/* Privacy Note */}
-          <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-start gap-2.5 text-xs text-slate-400">
+          <div className="p-3.5 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-start gap-2.5 text-xs text-zinc-400 font-mono">
             <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
             <p>
-              Your key is saved only in your browser's local storage. Videos are processed directly with zero server storage.
+              Stored 100% locally in your browser. All video cutting, audio extraction, and subtitle rendering runs on your device.
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="pt-4 border-t border-slate-800 flex items-center justify-end gap-2 shrink-0">
+        <div className="pt-4 border-t border-amber-500/20 flex items-center justify-end gap-3 shrink-0">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 transition cursor-pointer"
+            className="px-4 py-2 rounded-xl text-xs font-bold text-zinc-400 hover:bg-zinc-800 transition cursor-pointer font-mono"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={!keyInput.trim()}
-            className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition shadow-lg shadow-indigo-600/25 disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+            className="px-6 py-2.5 rounded-xl text-xs font-black text-black bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 transition shadow-xl shadow-amber-500/25 disabled:opacity-50 cursor-pointer flex items-center gap-2 font-mono uppercase tracking-wider"
           >
-            <Check className="w-4 h-4" />
-            <span>Save & Apply</span>
+            <Check className="w-4 h-4 text-black stroke-[3]" />
+            <span>Save Configuration</span>
           </button>
         </div>
       </div>

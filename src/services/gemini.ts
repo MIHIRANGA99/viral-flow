@@ -7,10 +7,10 @@ export interface ModelOption {
 }
 
 export const GEMINI_MODELS: ModelOption[] = [
-  { id: 'gemini-3.7-flash', name: 'Gemini 3.7 Flash (Default & Ultra Fast Reasoning)', description: 'Next-gen multimodal reasoning with high performance' },
-  { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash (Fast Multimodal)', description: 'Fast, high-rate limits and modern multimodal processing' },
-  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (Universal Fallback)', description: 'High reliability and long context video support' },
-  { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro (Deep Multimodal Reasoning)', description: 'High precision scene & copywriting detail' },
+  { id: 'gemini-3.6-flash', name: 'Gemini 3.6 Flash (Official Recommended & Fast)', description: 'Google official stable production model for audio, video, and text' },
+  { id: 'gemini-3.7-flash', name: 'Gemini 3.7 Flash (Next-Gen Reasoning)', description: 'Next-gen reasoning model with multimodal understanding' },
+  { id: 'gemini-3.5-flash-lite', name: 'Gemini 3.5 Flash Lite (Ultra Low Latency)', description: 'High speed, lightweight audio/visual recognition' },
+  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (Stable Fallback)', description: 'Stable high throughput model' },
 ];
 
 export type GeminiModelId = string;
