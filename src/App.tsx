@@ -10,10 +10,6 @@ import { HistoryDrawer } from './components/HistoryDrawer';
 import { FullScreenLoader } from './components/FullScreenLoader';
 import { ErrorModal } from './components/ErrorModal';
 import { MultiClipSequencer } from './components/MultiClipSequencer';
-import { VideoStudioMain } from './components/VideoStudio/VideoStudioMain';
-import { BlurText } from './components/reactbits/BlurText';
-import { RotatingText } from './components/reactbits/RotatingText';
-import { ShinyText } from './components/reactbits/ShinyText';
 import type { VideoMetadata, VideoAnalysisResult, AnalysisHistoryItem } from './types';
 import { analyzeVideoWithGemini } from './services/gemini';
 import type { GeminiModelId } from './services/gemini';
@@ -25,7 +21,6 @@ export function App() {
   const [model, setModel] = useState<GeminiModelId>('gemini-3.7-flash');
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [appMode, setAppMode] = useState<'studio' | 'viral'>('viral');
   
   const [currentVideo, setCurrentVideo] = useState<VideoMetadata | null>(null);
   const [sequencerClips, setSequencerClips] = useState<VideoMetadata[] | null>(null);
@@ -246,7 +241,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0F19] text-slate-100 flex flex-col selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-[#0B0F19] text-slate-100 flex flex-col selection:bg-indigo-500 selection:text-white font-['Plus_Jakarta_Sans',sans-serif]">
       {/* Full-Screen Animated Multimodal AI Loader */}
       <FullScreenLoader
         isOpen={isAnalyzing}
@@ -304,43 +299,20 @@ export function App() {
           </div>
         )}
 
+        {/* Hero Section */}
         {!currentVideo && !sequencerClips && !analysisResult && (
-          <div className="text-center space-y-5 pt-8 pb-4">
-            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-xs font-bold text-amber-300 mb-1 shadow-lg shadow-amber-500/5">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400 fill-current animate-spin" style={{ animationDuration: '6s' }} />
-              <ShinyText text="100% Client-Side Multi-Clip Reel Engine" speed={3} className="font-mono text-xs font-black" />
+          <div className="text-center space-y-4 pt-6 pb-2">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/25 text-xs font-semibold text-indigo-300 mb-1 shadow-lg shadow-indigo-500/5">
+              <Sparkles className="w-3.5 h-3.5 text-pink-400 animate-pulse" />
+              <span>AI Multimodal Video Engine (TikTok • Facebook • Google Flow Music)</span>
             </div>
 
-            <div className="space-y-2">
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight">
-                <BlurText text="COMBINE SHORT CLIPS INTO" delay={0.03} className="justify-center" />
-                <br />
-                <ShinyText
-                  text="VIRAL MASTER REELS"
-                  speed={3}
-                  className="font-mono text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight"
-                />
-              </h1>
-            </div>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
+              Turn Clips into <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-pink-400 to-amber-300">Viral Gold</span>
+            </h1>
 
-            <div className="flex items-center justify-center gap-2 text-sm text-zinc-400 font-mono">
-              <span>Reel Engine: </span>
-              <RotatingText
-                texts={[
-                  'Combine 3x 10s Clips into 30s Reel',
-                  'AI Multimodal Viral Copy',
-                  'Google Flow Music Sync Prompts',
-                  'SOLIVAST Brand Logo Overlay',
-                  '100% Zero-Storage Local Processing',
-                ]}
-                rotationInterval={2800}
-                className="text-amber-300 font-bold"
-                elementLevelClassName="border-b border-amber-500/40 pb-0.5"
-              />
-            </div>
-
-            <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl mx-auto leading-relaxed pt-1">
-              Select multiple clips or a single video file. Stitch clips in chronological order, craft custom viral hooks with Gemini AI, attach generated background beats, and export with your brand logo!
+            <p className="text-xs sm:text-sm text-slate-400 max-w-2xl mx-auto leading-relaxed">
+              Select one or multiple clips (e.g. three 10s clips to make a 30s reel). Gemini analyzes visual hooks and rhythm to generate high-conversion TikTok/Facebook copy and custom Google Flow background music prompts.
             </p>
           </div>
         )}
@@ -366,83 +338,43 @@ export function App() {
           />
         )}
 
-        {/* Active Combined / Single Video Player & Studio */}
+        {/* Active Combined / Single Video Player */}
         {currentVideo && (
-          <div className="space-y-6">
-            {/* Mode Switcher Bar */}
-            <div className="flex items-center justify-center">
-              <div className="inline-flex p-1.5 rounded-2xl bg-zinc-900/90 border border-amber-500/20 shadow-2xl backdrop-blur-xl">
-                <button
-                  type="button"
-                  onClick={() => setAppMode('viral')}
-                  className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer font-mono tracking-wide ${
-                    appMode === 'viral'
-                      ? 'bg-gradient-to-r from-amber-500 via-pink-500 to-indigo-600 text-white shadow-xl shadow-indigo-600/30'
-                      : 'text-zinc-400 hover:text-white'
-                  }`}
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                  Viral Social Copy &amp; Music Kit
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAppMode('studio')}
-                  className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer font-mono tracking-wide ${
-                    appMode === 'studio'
-                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-xl shadow-amber-500/25'
-                      : 'text-zinc-400 hover:text-white'
-                  }`}
-                >
-                  <Film className="w-3.5 h-3.5" />
-                  Cinema Split &amp; Sinhala Subtitles Studio
-                </button>
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              <div className={analysisResult ? 'lg:col-span-5 lg:sticky lg:top-20' : 'lg:col-span-12 max-w-3xl mx-auto'}>
+                <VideoPlayer
+                  ref={videoPlayerRef}
+                  metadata={currentVideo}
+                  onChangeVideo={handleChangeVideo}
+                  onAnalyze={handleStartAnalysis}
+                  isAnalyzing={isAnalyzing}
+                  hasResult={!!analysisResult}
+                />
               </div>
-            </div>
 
-            {appMode === 'studio' ? (
-              <VideoStudioMain
-                video={currentVideo}
-                apiKey={apiKey}
-                selectedModel={model}
-                onBack={handleChangeVideo}
-                onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
-              />
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                <div className={analysisResult ? 'lg:col-span-5 lg:sticky lg:top-20' : 'lg:col-span-12 max-w-3xl mx-auto'}>
-                  <VideoPlayer
-                    ref={videoPlayerRef}
-                    metadata={currentVideo}
-                    onChangeVideo={handleChangeVideo}
-                    onAnalyze={handleStartAnalysis}
-                    isAnalyzing={isAnalyzing}
-                    hasResult={!!analysisResult}
+              {analysisResult && (
+                <div className="lg:col-span-7">
+                  <AnalysisDashboard
+                    result={analysisResult}
+                    onSeekVideo={handleSeekVideo}
+                    onAttachMusic={(file) => videoPlayerRef.current?.attachMusicFile?.(file)}
                   />
                 </div>
-
-                {analysisResult && (
-                  <div className="lg:col-span-7">
-                    <AnalysisDashboard
-                      result={analysisResult}
-                      onSeekVideo={handleSeekVideo}
-                      onAttachMusic={(file) => videoPlayerRef.current?.attachMusicFile?.(file)}
-                    />
-                  </div>
-                )}
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
         {!currentVideo && !sequencerClips && analysisResult && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-3.5 rounded-2xl cinema-card text-xs font-mono">
-              <span className="text-zinc-300">
-                Viewing analysis for: <strong className="text-amber-400">{analysisResult.fileName}</strong>
+            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-xs">
+              <span className="text-slate-300">
+                Viewing analysis for: <strong className="text-indigo-400">{analysisResult.fileName}</strong>
               </span>
               <button
                 onClick={() => setAnalysisResult(null)}
-                className="text-amber-400 hover:text-amber-300 font-bold cursor-pointer"
+                className="text-indigo-400 hover:text-indigo-300 font-bold cursor-pointer"
               >
                 Analyze New Reel
               </button>
@@ -456,14 +388,14 @@ export function App() {
         )}
       </main>
 
-      <footer className="border-t border-amber-500/20 bg-[#060709] py-6 text-center text-xs text-zinc-500 font-mono">
+      <footer className="border-t border-slate-800/80 bg-[#070A12] py-6 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Film className="w-4 h-4 text-amber-400" />
-            <span className="font-bold text-zinc-300">ViralFlow AI &amp; Studio</span>
-            <span>— 100% Client-Side Multi-Clip Master Reel Engine</span>
+            <Film className="w-4 h-4 text-indigo-400" />
+            <span className="font-bold text-slate-300">ViralFlow AI</span>
+            <span>— 100% Client-Side Multi-Clip Reel Combiner &amp; Social Video Studio</span>
           </div>
-          <div className="flex items-center gap-4 text-zinc-400">
+          <div className="flex items-center gap-4 text-slate-400">
             <span>TikTok Hooks</span>
             <span>•</span>
             <span>Facebook Descriptions</span>
