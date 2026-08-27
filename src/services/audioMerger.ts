@@ -53,7 +53,7 @@ export async function mergeVideoAndAudio({
     };
 
     try {
-      onProgress?.(5, 'Initializing high-fidelity GPU hardware decoder...');
+      onProgress?.(5, 'Pre-buffering video frames & GPU hardware decoder...');
 
       // Preload logo if logo overlay mode is enabled
       if (watermarkConfig?.enabled && watermarkConfig.mode === 'logo' && watermarkConfig.logoOverlay?.imageUrl) {
@@ -128,7 +128,7 @@ export async function mergeVideoAndAudio({
       const width = videoEl.videoWidth || 1080;
       const height = videoEl.videoHeight || 1920;
 
-      onProgress?.(15, 'Configuring Web Audio master mixer & lossless canvas...');
+      onProgress?.(15, 'Configuring Audio Master & High-Res Canvas Compositor...');
 
       const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
       audioCtx = new AudioCtxClass();
@@ -146,27 +146,13 @@ export async function mergeVideoAndAudio({
       videoGain.connect(dest);
 
       // Background music routing
+      let audioGain: GainNode | null = null;
       if (audioEl) {
         const audioSource = audioCtx.createMediaElementSource(audioEl);
-        const audioGain = audioCtx.createGain();
+        audioGain = audioCtx.createGain();
         audioGain.gain.value = musicVolume;
         audioSource.connect(audioGain);
         audioGain.connect(dest);
-
-        const now = audioCtx.currentTime;
-        const endTime = now + duration;
-
-        if (musicAdjustment?.fadeIn && musicAdjustment.fadeIn > 0) {
-          audioGain.gain.setValueAtTime(0, now);
-          audioGain.gain.linearRampToValueAtTime(musicVolume, now + musicAdjustment.fadeIn);
-        } else {
-          audioGain.gain.setValueAtTime(musicVolume, now);
-        }
-
-        if (musicAdjustment?.fadeOut && musicAdjustment.fadeOut > 0) {
-          audioGain.gain.setValueAtTime(musicVolume, Math.max(now, endTime - musicAdjustment.fadeOut));
-          audioGain.gain.linearRampToValueAtTime(0, endTime);
-        }
       }
 
       // High-resolution Canvas
@@ -253,34 +239,83 @@ export async function mergeVideoAndAudio({
         resolve({ blob: finalBlob, downloadUrl, filename });
       };
 
-      onProgress?.(25, 'Rendering video frames at maximum quality (15 Mbps)...');
+      onProgress?.(25, 'Priming video playback & warming up decoder...');
 
-      // Initial frame render
-      renderFrameWithWatermarkFilter(ctx, videoEl, renderConfig, width, height);
-
-      // Start recording
-      recorder.start(200);
-
+      // 1. Seek to exact start timestamp and wait for seeked to complete
       videoEl.currentTime = 0;
       if (audioEl) {
         audioEl.currentTime = musicAdjustment?.startOffset || 0;
       }
 
-      // Start decoder frame loop
+      await new Promise((res) => {
+        if (!videoEl) return res(true);
+        const onSeeked = () => {
+          videoEl?.removeEventListener('seeked', onSeeked);
+          res(true);
+        };
+        videoEl.addEventListener('seeked', onSeeked);
+        setTimeout(() => res(true), 400);
+      });
+
+      // 2. Prime the canvas with the clean initial frame
+      renderFrameWithWatermarkFilter(ctx, videoEl, renderConfig, width, height);
+
+      // 3. Start decoder frame loop
       if ('requestVideoFrameCallback' in videoEl) {
         rvfcHandle = (videoEl as any).requestVideoFrameCallback(renderCurrentFrame);
       } else {
         rafHandle = requestAnimationFrame(renderCurrentFrame);
       }
 
+      // 4. Start playback FIRST so the browser hardware decoder is actively streaming
       const playPromises: Promise<void>[] = [videoEl.play()];
       if (audioEl) playPromises.push(audioEl.play());
       await Promise.all(playPromises);
 
+      // 5. Wait for the first active decoded moving frame before engaging MediaRecorder
+      const vidAny: any = videoEl;
+      await new Promise<void>((resolveReady) => {
+        if (vidAny && typeof vidAny.requestVideoFrameCallback === 'function') {
+          vidAny.requestVideoFrameCallback(() => resolveReady());
+        } else if (vidAny) {
+          const onTimeUpdate = () => {
+            vidAny.removeEventListener('timeupdate', onTimeUpdate);
+            resolveReady();
+          };
+          vidAny.addEventListener('timeupdate', onTimeUpdate);
+          setTimeout(() => resolveReady(), 150);
+        } else {
+          resolveReady();
+        }
+      });
+
+      // 6. Schedule audio envelope automation synchronously with recording start
+      if (audioCtx && audioGain && audioEl) {
+        const now = audioCtx.currentTime;
+        const endTime = now + duration;
+
+        if (musicAdjustment?.fadeIn && musicAdjustment.fadeIn > 0) {
+          audioGain.gain.setValueAtTime(0, now);
+          audioGain.gain.linearRampToValueAtTime(musicVolume, now + musicAdjustment.fadeIn);
+        } else {
+          audioGain.gain.setValueAtTime(musicVolume, now);
+        }
+
+        if (musicAdjustment?.fadeOut && musicAdjustment.fadeOut > 0) {
+          audioGain.gain.setValueAtTime(musicVolume, Math.max(now, endTime - musicAdjustment.fadeOut));
+          audioGain.gain.linearRampToValueAtTime(0, endTime);
+        }
+      }
+
+      // 7. Start recording ONLY when video is actively rolling (zero 1st/2nd second stutter)
+      recorder.start(200);
+
+      onProgress?.(30, 'Recording smooth 30 FPS stream...');
+
       progressInterval = setInterval(() => {
         if (videoEl && !videoEl.paused && duration > 0) {
           const current = videoEl.currentTime;
-          const pct = Math.min(95, Math.floor(25 + (current / duration) * 70));
+          const pct = Math.min(95, Math.floor(30 + (current / duration) * 65));
           onProgress?.(pct, `Processing Ultra-HD frames (${current.toFixed(1)}s / ${duration.toFixed(1)}s)...`);
         }
       }, 250);
@@ -296,7 +331,7 @@ export async function mergeVideoAndAudio({
         if (recorder.state === 'recording') {
           recorder.stop();
         }
-      }, (duration + 1.8) * 1000);
+      }, (duration + 2.0) * 1000);
     } catch (err: any) {
       cleanup();
       reject(err);

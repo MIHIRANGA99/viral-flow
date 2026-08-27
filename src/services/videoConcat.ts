@@ -54,9 +54,8 @@ export async function concatenateVideos(
     };
 
     try {
-      onProgress?.(5, `Preparing ${clips.length} video clips for concatenation...`);
+      onProgress?.(5, `Pre-buffering ${clips.length} video clips for smooth stitching...`);
 
-      // Determine master resolution based on the first clip or highest resolution
       const targetWidth = clips[0].width || 1080;
       const targetHeight = clips[0].height || 1920;
       const totalDuration = clips.reduce((acc, c) => acc + (c.duration || 10), 0);
@@ -147,10 +146,9 @@ export async function concatenateVideos(
         resolve({ metadata: combinedMetadata, blob: finalBlob, downloadUrl });
       };
 
-      recorder.start(200);
-
       // Sequentially process each clip
       let elapsedGlobalSeconds = 0;
+      let hasStartedRecording = false;
 
       for (let i = 0; i < clips.length; i++) {
         if (!isConcatActive) break;
@@ -221,6 +219,17 @@ export async function concatenateVideos(
               }
             }
 
+            // Pre-seek to 0
+            videoEl.currentTime = 0;
+            await new Promise((res) => {
+              const onSeeked = () => {
+                videoEl.removeEventListener('seeked', onSeeked);
+                res(true);
+              };
+              videoEl.addEventListener('seeked', onSeeked);
+              setTimeout(() => res(true), 300);
+            });
+
             // Frame drawing loop for this clip
             let isCurrentClipRunning = true;
 
@@ -274,6 +283,14 @@ export async function concatenateVideos(
 
             videoEl.onended = endCurrentClip;
 
+            // Draw initial frame
+            const cW = videoEl.videoWidth || targetWidth;
+            const cH = videoEl.videoHeight || targetHeight;
+            const scale = Math.min(targetWidth / cW, targetHeight / cH);
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, targetWidth, targetHeight);
+            ctx.drawImage(videoEl, (targetWidth - cW * scale) / 2, (targetHeight - cH * scale) / 2, cW * scale, cH * scale);
+
             // Kick off frame loop
             if ('requestVideoFrameCallback' in videoEl) {
               rvfcHandle = (videoEl as any).requestVideoFrameCallback(renderClipFrame);
@@ -282,6 +299,29 @@ export async function concatenateVideos(
             }
 
             await videoEl.play();
+
+            // Wait for active moving frame
+            const vidAny: any = videoEl;
+            await new Promise<void>((resolvePlaying) => {
+              if (vidAny && typeof vidAny.requestVideoFrameCallback === 'function') {
+                vidAny.requestVideoFrameCallback(() => resolvePlaying());
+              } else if (vidAny) {
+                const onTime = () => {
+                  vidAny.removeEventListener('timeupdate', onTime);
+                  resolvePlaying();
+                };
+                vidAny.addEventListener('timeupdate', onTime);
+                setTimeout(() => resolvePlaying(), 150);
+              } else {
+                resolvePlaying();
+              }
+            });
+
+            // Start recorder on the first clip when frames are actively streaming
+            if (!hasStartedRecording && recorder) {
+              recorder.start(200);
+              hasStartedRecording = true;
+            }
 
             // Safety timeout
             setTimeout(() => {
